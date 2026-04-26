@@ -11,20 +11,60 @@ const SUPABASE_ANON_KEY = "PASTE_ANON_KEY_DI_SINI";
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const MODEL_OPTIONS = [
-  ["Kling 3.1 Motion Control", "kling-3-1-motion-control"],
-  ["Kling 3.1 Omni", "kling-3-1-omni"],
-  ["Kling 2.6 Motion Control", "kling-2-6-motion-control"],
   ["Kling 3.0", "kling-3-0"],
+  ["Kling 3.1 Omni", "kling-3-1-omni"],
+  ["Kling 3.1 Motion Control", "kling-3-1-motion-control"],
+  ["Kling 2.6", "kling-2-6"],
+  ["Kling 2.6 Motion Control", "kling-2-6-motion-control"],
+  ["Kling O1", "kling-o1"],
+  ["Kling 2.5", "kling-2-5"],
+  ["Kling 2.1", "kling-2-1"],
+  ["Kling 2.1 Master", "kling-2-1-master"],
+
   ["Seedance 2.0", "seedance-2-0"],
+  ["Seedance 2.0 Fast", "seedance-2-0-fast"],
+  ["Seedance 1.5 Pro", "seedance-1-5-pro"],
+  ["Seedance 1.0 Pro", "seedance-1-0-pro"],
+  ["Seedance 1.0 Fast", "seedance-1-0-fast"],
+  ["Seedance 1.0 Lite", "seedance-1-0-lite"],
+
+  ["Grok", "grok"],
+
   ["Google Veo 3.1", "veo-3-1"],
+  ["Google Veo 3.1 Fast", "veo-3-1-fast"],
+  ["Google Veo 3.1 Lite", "veo-3-1-lite"],
+  ["Google Veo 3", "veo-3"],
+  ["Google Veo 3 Fast", "veo-3-fast"],
+  ["Google Veo 2", "veo-2"],
+
   ["Omni Human 1.5", "omni-human-1-5"],
+
   ["Runway Gen 4.5", "runway-gen-4-5"],
+  ["Runway Gen 4", "runway-gen-4"],
+  ["Runway Act Two", "runway-act-two"],
+
   ["Veed Fabric 1.0", "veed-fabric-1-0"],
   ["Veed Fabric 1.0 Fast", "veed-fabric-1-0-fast"],
+
+  ["MiniMax Hailuo 2.3", "hailuo-2-3"],
+  ["MiniMax Hailuo 2.3 Fast", "hailuo-2-3-fast"],
+  ["MiniMax Hailuo 02", "hailuo-02"],
+  ["MiniMax Hailuo Live Illustrations", "hailuo-live-illustrations"],
+
   ["PixVerse 6", "pixverse-6"],
+  ["PixVerse 5.5", "pixverse-5-5"],
+
   ["Sora 2 Pro", "sora-2-pro"],
+  ["Sora 2", "sora-2"],
+
   ["Wan 2.7", "wan-2-7"],
-  ["LTX 2 Pro", "ltx-2-pro"]
+  ["Wan 2.6", "wan-2-6"],
+  ["Wan 2.5", "wan-2-5"],
+  ["Wan 2.2", "wan-2-2"],
+  ["Wan 2.2 Anime Move", "wan-2-2-anime-move"],
+
+  ["LTX 2 Pro", "ltx-2-pro"],
+  ["LTX 2 Fast", "ltx-2-fast"]
 ];
 
 const AFFILIATE_STYLES = [
