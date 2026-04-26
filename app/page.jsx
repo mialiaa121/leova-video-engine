@@ -584,7 +584,7 @@ export default function Page() {
         </button>
 
         <p className="footer">
-  © 2026 Powered by <strong>theeradigital.id</strong>
+  © 2026 Powered by theeradigital.id
 </p>
       </main>
 
