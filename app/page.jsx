@@ -7,7 +7,7 @@ const BACKEND_GENERATE_URL = "https://backend-freepik-user-key.vercel.app/api/ge
 const BACKEND_STATUS_URL = "https://backend-freepik-user-key.vercel.app/api/status";
 
 const SUPABASE_URL = "https://fadzqoseymrrmxyeiioe.supabase.co";
-const SUPABASE_ANON_KEY = "PASTE_ANON_KEY_DI_SINI";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZhZHpxb3NleW1ycm14eWVpaW9lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxOTcyMzAsImV4cCI6MjA5Mjc3MzIzMH0.S5PRqZ29Edvd1ZclL-duIyOHrpzapOh2pMciPne_GXc";
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const MODEL_OPTIONS = [
