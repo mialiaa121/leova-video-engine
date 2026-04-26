@@ -370,14 +370,6 @@ export default function Page() {
         </button>
       </header>
 
-      <main className="main">
-        {!freepikApiKey && (
-          <div className="card">
-            <h2>Masukkan API Key Freepik dulu</h2>
-            <p className="help">Klik Setting untuk memasukkan API Key Freepik milik kamu.</p>
-          </div>
-        )}
-
         <div className="card">
           <label className="label">Mode Video</label>
           <select className="select" value={videoMode} onChange={(e) => changeMode(e.target.value)}>
@@ -592,7 +584,7 @@ export default function Page() {
         </button>
 
         <p className="footer">
-          Gunakan hanya foto, video, produk, dan audio yang kamu miliki atau punya izin gunakan.
+          © 2026 powered by theeradigital.id
         </p>
       </main>
 
@@ -600,7 +592,7 @@ export default function Page() {
         <div className="modalBackdrop">
           <div className="modal">
             <h2>API Settings</h2>
-            <p className="help">Masukkan API Key Freepik milik kamu sendiri.</p>
+            <p className="help">Masukkan API Key milik kamu sendiri.</p>
 
             <div className="row">
               <input
@@ -616,7 +608,7 @@ export default function Page() {
             </div>
 
             <p className="help">
-              API key hanya disimpan selama halaman terbuka dan tidak disimpan permanen.
+              API Key hanya tersimpan dihalaman terbuka dan tidak tersimpan permanen.
             </p>
 
             <div className="row" style={{ marginTop: 16 }}>
