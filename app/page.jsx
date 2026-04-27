@@ -8,6 +8,7 @@ const BACKEND_STATUS_URL = "https://backend-freepik-user-key.vercel.app/api/stat
 
 const SUPABASE_URL = "https://fadzqoseymrrmxyeiioe.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZhZHpxb3NleW1ycm14eWVpaW9lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxOTcyMzAsImV4cCI6MjA5Mjc3MzIzMH0.S5PRqZ29Edvd1ZclL-duIyOHrpzapOh2pMciPne_GXc";
+
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const MODEL_OPTIONS = [
@@ -104,8 +105,8 @@ const DURATIONS = {
 async function uploadToPublicStorage(file) {
   if (!file) return null;
 
-  const fileExt = file.name.split(".").pop();
-  const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
+  const ext = file.name.split(".").pop();
+  const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
   const filePath = `uploads/${fileName}`;
 
   const { error } = await supabase.storage
@@ -115,7 +116,9 @@ async function uploadToPublicStorage(file) {
       upsert: false
     });
 
-  if (error) throw new Error("Upload gagal: " + error.message);
+  if (error) {
+    throw new Error("Upload gagal: " + error.message);
+  }
 
   const { data } = supabase.storage
     .from("leova-uploads")
@@ -155,12 +158,6 @@ function getVideoUrl(data) {
     data?.video_url ||
     data?.url ||
     null
-  );
-}
-
-function isFinished(status) {
-  return ["COMPLETED", "SUCCEEDED", "SUCCESS", "DONE", "FINISHED"].includes(
-    String(status || "").toUpperCase()
   );
 }
 
@@ -204,14 +201,17 @@ export default function Page() {
 
   function changeMode(value) {
     setVideoMode(value);
+
     if (value === "cloning") {
       setDuration(5);
       setModelId("kling-3-1-motion-control");
     }
+
     if (value === "timelapse") {
       setDuration(15);
       setModelId("kling-3-0");
     }
+
     if (value === "affiliate") {
       setDuration(30);
       setModelId("kling-3-1-motion-control");
@@ -243,18 +243,18 @@ export default function Page() {
         throw new Error(data?.error || "Gagal mengecek hasil video.");
       }
 
-      const videoUrl = getVideoUrl(data);
+      const foundVideoUrl = getVideoUrl(data);
       const status = data?.status || data?.raw?.data?.status || data?.raw?.status;
 
-      if (videoUrl && (isFinished(status) || status)) {
+      if (foundVideoUrl) {
         setProgress(100);
         setProcessText("Video selesai dan siap diunduh.");
-        setFinalVideoUrl(videoUrl);
+        setFinalVideoUrl(foundVideoUrl);
         return;
       }
 
       if (isFailed(status)) {
-        throw new Error("Video gagal diproses. Coba pakai input yang lebih sederhana.");
+        throw new Error("Video gagal diproses. Coba gunakan input yang lebih sederhana.");
       }
     }
 
@@ -268,16 +268,35 @@ export default function Page() {
     setProgress(5);
 
     try {
-      if (!freepikApiKey.trim()) throw new Error("Masukkan API Key Freepik dulu di Setting.");
-      if (!imageFile) throw new Error("Upload foto model / objek dulu.");
-      if (videoMode === "cloning" && !videoFile) throw new Error("Upload video referensi untuk mode cloning.");
-      if (videoMode === "timelapse" && !prompt.trim()) throw new Error("Prompt wajib untuk mode timelapse.");
+      if (!freepikApiKey.trim()) {
+        throw new Error("Masukkan API Key Freepik dulu di Setting.");
+      }
 
-      if (videoMode === "affiliate" && Number(duration) > 30 && !modelId.includes("veed-fabric")) {
+      if (!imageFile) {
+        throw new Error("Upload foto model / objek dulu.");
+      }
+
+      if (videoMode === "cloning" && !videoFile) {
+        throw new Error("Upload video referensi untuk mode cloning.");
+      }
+
+      if (videoMode === "timelapse" && !prompt.trim()) {
+        throw new Error("Prompt wajib untuk mode timelapse.");
+      }
+
+      if (
+        videoMode === "affiliate" &&
+        Number(duration) > 30 &&
+        !modelId.includes("veed-fabric")
+      ) {
         throw new Error("Affiliate di atas 30 detik wajib memakai Veed Fabric.");
       }
 
-      if (videoMode === "affiliate" && modelId.includes("veed-fabric") && !audioFile) {
+      if (
+        videoMode === "affiliate" &&
+        modelId.includes("veed-fabric") &&
+        !audioFile
+      ) {
         throw new Error("Veed Fabric membutuhkan audio voice over.");
       }
 
@@ -331,6 +350,7 @@ export default function Page() {
       }
 
       const directVideoUrl = getVideoUrl(data);
+
       if (directVideoUrl) {
         setProgress(100);
         setProcessText("Video selesai dan siap diunduh.");
@@ -339,10 +359,14 @@ export default function Page() {
       }
 
       const taskId = getTaskId(data);
-      if (!taskId) throw new Error("Task video tidak ditemukan.");
+
+      if (!taskId) {
+        throw new Error("Task video tidak ditemukan.");
+      }
 
       setProgress(65);
       setProcessText("Mohon tunggu, AI sedang membuat video kamu.");
+
       await pollStatus(taskId);
     } catch (err) {
       setError(err.message || "Terjadi error.");
@@ -372,16 +396,13 @@ export default function Page() {
       </header>
 
       <main className="main">
-        {!freepikApiKey && (
-          <div className="card">
-            <h2>Masukkan API Key Freepik dulu</h2>
-            <p className="help">Klik Setting untuk memasukkan API Key Freepik milik kamu.</p>
-          </div>
-        )}
-
         <div className="card">
           <label className="label">Mode Video</label>
-          <select className="select" value={videoMode} onChange={(e) => changeMode(e.target.value)}>
+          <select
+            className="select"
+            value={videoMode}
+            onChange={(e) => changeMode(e.target.value)}
+          >
             <option value="cloning">Video Cloning / Motion Transfer</option>
             <option value="timelapse">Timelapse Transformation</option>
             <option value="affiliate">Video Affiliate / UGC Ads</option>
@@ -407,7 +428,9 @@ export default function Page() {
                 setVideoPreview(file ? URL.createObjectURL(file) : "");
               }}
             />
-            {videoPreview && <video className="preview" src={videoPreview} controls />}
+            {videoPreview && (
+              <video className="preview" src={videoPreview} controls />
+            )}
           </div>
 
           <div>
@@ -428,7 +451,9 @@ export default function Page() {
                 setImagePreview(file ? URL.createObjectURL(file) : "");
               }}
             />
-            {imagePreview && <img className="preview" src={imagePreview} alt="preview" />}
+            {imagePreview && (
+              <img className="preview" src={imagePreview} alt="preview" />
+            )}
           </div>
         </div>
 
@@ -442,7 +467,9 @@ export default function Page() {
                 onChange={(e) => setAffiliateStyle(e.target.value)}
               >
                 {AFFILIATE_STYLES.map((style) => (
-                  <option key={style} value={style}>{style}</option>
+                  <option key={style} value={style}>
+                    {style}
+                  </option>
                 ))}
               </select>
             </div>
@@ -459,7 +486,9 @@ export default function Page() {
                   setProductPreview(file ? URL.createObjectURL(file) : "");
                 }}
               />
-              {productPreview && <img className="preview" src={productPreview} alt="produk" />}
+              {productPreview && (
+                <img className="preview" src={productPreview} alt="produk" />
+              )}
             </div>
 
             <input
@@ -491,7 +520,9 @@ export default function Page() {
                 accept="audio/*"
                 onChange={(e) => setAudioFile(e.target.files?.[0] || null)}
               />
-              <p className="help">Wajib untuk Veed Fabric atau affiliate di atas 30 detik.</p>
+              <p className="help">
+                Wajib untuk Veed Fabric atau affiliate di atas 30 detik.
+              </p>
               {audioFile && <p className="help">Audio: {audioFile.name}</p>}
             </div>
           </div>
@@ -500,9 +531,15 @@ export default function Page() {
         <div className="card grid">
           <div>
             <label className="label">Model AI</label>
-            <select className="select" value={modelId} onChange={(e) => setModelId(e.target.value)}>
+            <select
+              className="select"
+              value={modelId}
+              onChange={(e) => setModelId(e.target.value)}
+            >
               {MODEL_OPTIONS.map(([label, id]) => (
-                <option key={id} value={id}>{label}</option>
+                <option key={id} value={id}>
+                  {label}
+                </option>
               ))}
             </select>
             <p className="help">
@@ -513,306 +550,11 @@ export default function Page() {
           <div className="grid grid2">
             <div>
               <label className="label">Durasi</label>
-              <select className="select" value={duration} onChange={(e) => setDuration(Number(e.target.value))}>
-                {DURATIONS[videoMode].map((d) => (
-                  <option key={d} value={d}>
-                    {d < 60 ? `${d} detik` : `${d / 60} menit`}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="label">Aspect Ratio</label>
-              <select className="select" value={aspectRatio} onChange={(e) => setAspectRatio(e.target.value)}>
-                <option value="9:16">9:16 Reels/TikTok</option>
-                <option value="16:9">16:9 YouTube</option>
-                <option value="1:1">1:1 Square</option>
-              </select>
-            </div>
-          </div>
-
-          {videoMode === "affiliate" && (
-            <div>
-              <label className="label">Resolution untuk Veed Fabric</label>
-              <select className="select" value={resolution} onChange={(e) => setResolution(e.target.value)}>
-                <option value="720p">720p</option>
-                <option value="480p">480p</option>
-              </select>
-            </div>
-          )}
-
-          <div>
-            <label className="label">
-              {videoMode === "timelapse" ? "Prompt Timelapse" : "Prompt Optional"}
-            </label>
-            <textarea
-              className="textarea"
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              placeholder={
-                videoMode === "timelapse"
-                  ? "Create a realistic construction timelapse from old house to modern minimalist house..."
-                  : "Tambahkan arahan optional..."
-              }
-            />
-          </div>
-        </div>
-
-        {loading && (
-          <div className="card">
-            <h2>Memproses Video</h2>
-            <p className="help">{processText || "Mohon tunggu, AI sedang membuat video kamu."}</p>
-            <div className="progressWrap">
-              <div className="progressBar" style={{ width: `${progress}%` }} />
-            </div>
-            <p className="help">Proses ini bisa memakan waktu beberapa menit.</p>
-          </div>
-        )}
-
-        {error && <div className="error">{error}</div>}
-
-        {finalVideoUrl && (
-          <div className="card">
-            <h2>Video Selesai</h2>
-            <p className="success">Video selesai dan siap diunduh.</p>
-            <video className="preview" src={finalVideoUrl} controls />
-            <div className="row" style={{ marginTop: 14 }}>
-              <a className="btn" href={finalVideoUrl} download target="_blank" rel="noreferrer">
-                Download Video
-              </a>
-              <a className="btn btnDark" href={finalVideoUrl} target="_blank" rel="noreferrer">
-                Open Video
-              </a>
-            </div>
-          </div>
-        )}
-
-        <button className="btn btnFull" disabled={loading} onClick={handleGenerate}>
-          {loading ? "Sedang Memproses..." : "Generate Video"}
-        </button>
-
-        <p className="footer">
-          Powered by theeradigital.id
-        </p>
-      </main>
-
-      {showSettings && (
-        <div className="modalBackdrop">
-          <div className="modal">
-            <h2>API Settings</h2>
-            <p className="help">Masukkan API Key Freepik milik kamu sendiri.</p>
-
-            <div className="row">
-              <input
-                className="input"
-                type={showKey ? "text" : "password"}
-                value={freepikApiKey}
-                onChange={(e) => setFreepikApiKey(e.target.value)}
-                placeholder="Freepik API Key"
-              />
-              <button className="btn btnDark" onClick={() => setShowKey(!showKey)}>
-                {showKey ? "Hide" : "Show"}
-              </button>
-            </div>
-
-            <p className="help">
-              API key hanya disimpan selama halaman terbuka dan tidak disimpan permanen.
-            </p>
-
-            <div className="row" style={{ marginTop: 16 }}>
-              <button className="btn" onClick={() => setShowSettings(false)}>Simpan</button>
-              <button className="btn btnDark" onClick={() => setShowSettings(false)}>Tutup</button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-              }      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data?.error || "Request ke Freepik gagal.");
-      }
-
-      const directVideoUrl = getVideoUrl(data);
-      if (directVideoUrl) {
-        setProgress(100);
-        setProcessText("Video selesai dan siap diunduh.");
-        setFinalVideoUrl(directVideoUrl);
-        return;
-      }
-
-      const taskId = getTaskId(data);
-      if (!taskId) throw new Error("Task video tidak ditemukan.");
-
-      setProgress(65);
-      setProcessText("Mohon tunggu, AI sedang membuat video kamu.");
-      await pollStatus(taskId);
-    } catch (err) {
-      setError(err.message || "Terjadi error.");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  return (
-    <div className="container">
-      <header className="header">
-        <div className="logoBox">
-          <img
-            className="logo"
-            src="https://i.ibb.co.com/5ZHsXsc/IMG-20260417-185016-765.jpg"
-            alt="LEOVA"
-          />
-          <div>
-            <div className="title">LEOVA VIDEO ENGINE</div>
-            <div className="subtitle">Cloning • Timelapse • Affiliate</div>
-          </div>
-        </div>
-
-        <button className="btn btnDark" onClick={() => setShowSettings(true)}>
-          Setting
-        </button>
-      </header>
-
-        <div className="card">
-          <label className="label">Mode Video</label>
-          <select className="select" value={videoMode} onChange={(e) => changeMode(e.target.value)}>
-            <option value="cloning">Video Cloning / Motion Transfer</option>
-            <option value="timelapse">Timelapse Transformation</option>
-            <option value="affiliate">Video Affiliate / UGC Ads</option>
-          </select>
-        </div>
-
-        <div className="card grid grid2">
-          <div>
-            <label className="label">
-              {videoMode === "cloning"
-                ? "Upload Video Referensi"
-                : videoMode === "timelapse"
-                ? "Upload Video Referensi Timelapse (Optional)"
-                : "Upload Video Referensi Gaya Affiliate (Optional)"}
-            </label>
-            <input
-              className="input"
-              type="file"
-              accept="video/*"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                setVideoFile(file || null);
-                setVideoPreview(file ? URL.createObjectURL(file) : "");
-              }}
-            />
-            {videoPreview && <video className="preview" src={videoPreview} controls />}
-          </div>
-
-          <div>
-            <label className="label">
-              {videoMode === "timelapse"
-                ? "Upload Foto Objek Awal"
-                : videoMode === "affiliate"
-                ? "Upload Foto Model Affiliate"
-                : "Upload Foto Model"}
-            </label>
-            <input
-              className="input"
-              type="file"
-              accept="image/*"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                setImageFile(file || null);
-                setImagePreview(file ? URL.createObjectURL(file) : "");
-              }}
-            />
-            {imagePreview && <img className="preview" src={imagePreview} alt="preview" />}
-          </div>
-        </div>
-
-        {videoMode === "affiliate" && (
-          <div className="card grid">
-            <div>
-              <label className="label">Pilih Model Video Affiliate</label>
               <select
                 className="select"
-                value={affiliateStyle}
-                onChange={(e) => setAffiliateStyle(e.target.value)}
+                value={duration}
+                onChange={(e) => setDuration(Number(e.target.value))}
               >
-                {AFFILIATE_STYLES.map((style) => (
-                  <option key={style} value={style}>{style}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="label">Upload Foto Produk</label>
-              <input
-                className="input"
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  setProductFile(file || null);
-                  setProductPreview(file ? URL.createObjectURL(file) : "");
-                }}
-              />
-              {productPreview && <img className="preview" src={productPreview} alt="produk" />}
-            </div>
-
-            <input
-              className="input"
-              value={productName}
-              onChange={(e) => setProductName(e.target.value)}
-              placeholder="Nama Produk"
-            />
-
-            <textarea
-              className="textarea"
-              value={productBenefits}
-              onChange={(e) => setProductBenefits(e.target.value)}
-              placeholder="Keunggulan produk"
-            />
-
-            <input
-              className="input"
-              value={ctaText}
-              onChange={(e) => setCtaText(e.target.value)}
-              placeholder="CTA, contoh: Klik keranjang kuning sekarang"
-            />
-
-            <div>
-              <label className="label">Upload Audio Voice Over</label>
-              <input
-                className="input"
-                type="file"
-                accept="audio/*"
-                onChange={(e) => setAudioFile(e.target.files?.[0] || null)}
-              />
-              <p className="help">Wajib untuk Veed Fabric atau affiliate di atas 30 detik.</p>
-              {audioFile && <p className="help">Audio: {audioFile.name}</p>}
-            </div>
-          </div>
-        )}
-
-        <div className="card grid">
-          <div>
-            <label className="label">Model AI</label>
-            <select className="select" value={modelId} onChange={(e) => setModelId(e.target.value)}>
-              {MODEL_OPTIONS.map(([label, id]) => (
-                <option key={id} value={id}>{label}</option>
-              ))}
-            </select>
-            <p className="help">
-              Cloning terbaik: Kling Motion Control. Affiliate 5 menit: Veed Fabric + audio.
-            </p>
-          </div>
-
-          <div className="grid grid2">
-            <div>
-              <label className="label">Durasi</label>
-              <select className="select" value={duration} onChange={(e) => setDuration(Number(e.target.value))}>
                 {DURATIONS[videoMode].map((d) => (
                   <option key={d} value={d}>
                     {d < 60 ? `${d} detik` : `${d / 60} menit`}
@@ -823,7 +565,11 @@ export default function Page() {
 
             <div>
               <label className="label">Aspect Ratio</label>
-              <select className="select" value={aspectRatio} onChange={(e) => setAspectRatio(e.target.value)}>
+              <select
+                className="select"
+                value={aspectRatio}
+                onChange={(e) => setAspectRatio(e.target.value)}
+              >
                 <option value="9:16">9:16 Reels/TikTok</option>
                 <option value="16:9">16:9 YouTube</option>
                 <option value="1:1">1:1 Square</option>
@@ -834,7 +580,11 @@ export default function Page() {
           {videoMode === "affiliate" && (
             <div>
               <label className="label">Resolution untuk Veed Fabric</label>
-              <select className="select" value={resolution} onChange={(e) => setResolution(e.target.value)}>
+              <select
+                className="select"
+                value={resolution}
+                onChange={(e) => setResolution(e.target.value)}
+              >
                 <option value="720p">720p</option>
                 <option value="480p">480p</option>
               </select>
@@ -861,7 +611,9 @@ export default function Page() {
         {loading && (
           <div className="card">
             <h2>Memproses Video</h2>
-            <p className="help">{processText || "Mohon tunggu, AI sedang membuat video kamu."}</p>
+            <p className="help">
+              {processText || "Mohon tunggu, AI sedang membuat video kamu."}
+            </p>
             <div className="progressWrap">
               <div className="progressBar" style={{ width: `${progress}%` }} />
             </div>
@@ -877,55 +629,36 @@ export default function Page() {
             <p className="success">Video selesai dan siap diunduh.</p>
             <video className="preview" src={finalVideoUrl} controls />
             <div className="row" style={{ marginTop: 14 }}>
-              <a className="btn" href={finalVideoUrl} download target="_blank" rel="noreferrer">
+              <a
+                className="btn"
+                href={finalVideoUrl}
+                download
+                target="_blank"
+                rel="noreferrer"
+              >
                 Download Video
               </a>
-              <a className="btn btnDark" href={finalVideoUrl} target="_blank" rel="noreferrer">
+              <a
+                className="btn btnDark"
+                href={finalVideoUrl}
+                target="_blank"
+                rel="noreferrer"
+              >
                 Open Video
               </a>
             </div>
           </div>
         )}
 
-        <button className="btn btnFull" disabled={loading} onClick={handleGenerate}>
+        <button
+          className="btn btnFull"
+          disabled={loading}
+          onClick={handleGenerate}
+        >
           {loading ? "Sedang Memproses..." : "Generate Video"}
         </button>
 
         <p className="footer">
           Powered by theeradigital.id
         </p>
-      </main>
-
-      {showSettings && (
-        <div className="modalBackdrop">
-          <div className="modal">
-            <h2>API Settings</h2>
-            <p className="help">Masukkan API Key milik kamu sendiri.</p>
-
-            <div className="row">
-              <input
-                className="input"
-                type={showKey ? "text" : "password"}
-                value={freepikApiKey}
-                onChange={(e) => setFreepikApiKey(e.target.value)}
-                placeholder="Freepik API Key"
-              />
-              <button className="btn btnDark" onClick={() => setShowKey(!showKey)}>
-                {showKey ? "Hide" : "Show"}
-              </button>
-            </div>
-
-            <p className="help">
-              API Key hanya tersimpan dihalaman terbuka dan tidak tersimpan permanen.
-            </p>
-
-            <div className="row" style={{ marginTop: 16 }}>
-              <button className="btn" onClick={() => setShowSettings(false)}>Simpan</button>
-              <button className="btn btnDark" onClick={() => setShowSettings(false)}>Tutup</button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-    }
+   
